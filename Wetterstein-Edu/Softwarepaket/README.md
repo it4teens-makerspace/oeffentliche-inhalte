@@ -49,8 +49,19 @@ pio run -t upload
 
 ## Erste Inbetriebnahme
 
-1. Nach dem Flashen öffnet die Station das WLAN **`Wetterstation-Setup`**
-   (Passwort `wetter1234`).
+WLAN-Zugangsdaten und Ort lassen sich auf zwei Wegen eintragen – beide führen
+zum selben Ergebnis, gespeichert wird im EEPROM.
+
+### Über die Flash-Seite (per USB)
+
+Direkt nach dem Flashen im Schritt 2 der Webseite SSID, Passwort und Ort
+eingeben und senden. Die Daten gehen über dasselbe USB-Kabel an die Station,
+die sie speichert und neu startet. Es gibt keinen Server, der etwas
+entgegennimmt – die Eingaben verlassen den Browser nicht.
+
+### Über das Setup-WLAN (ohne USB, auch vom Handy)
+
+1. Die Station öffnet das WLAN **`Wetterstation-Setup`** (Passwort `wetter1234`).
 2. Mit diesem WLAN verbinden. Die Setup-Seite öffnet sich meist automatisch,
    sonst im Browser `192.168.4.1` aufrufen.
 3. Eigenes WLAN aus der Liste wählen (oder SSID manuell eintragen), Passwort
@@ -60,6 +71,19 @@ pio run -t upload
    IP-Adresse steht auf der ersten Display-Seite und im seriellen Monitor
    (115200 Baud).
 
+### Serielles Protokoll
+
+Wer die Station aus eigenen Werkzeugen einrichten will, sendet über USB bei
+115200 Baud eine Zeile:
+
+```
+SETUP:<ssid>|<passwort>|<ort>
+```
+
+Die Station antwortet mit `OK` und startet neu, bei fehlerhafter Eingabe mit
+`ERR <grund>`. `PING` wird mit `PONG` beantwortet. Das funktioniert im laufenden
+Betrieb ebenso wie im Setup-Modus.
+
 ## Bedienung
 
 **Kurzer Tastendruck** schaltet die Display-Seite weiter:
@@ -67,7 +91,7 @@ pio run -t upload
 | Seite | Inhalt |
 |---|---|
 | 0 | Name, WLAN, IP-Adresse, eingestellter Ort |
-| 1 | Sensorwerte: Temperatur, Feuchte, Druck, Höhe |
+| 1 | Sensorwerte: Temperatur, Feuchte, Druck, Höhe (oder Sensor-Hinweis) |
 | 2 | Aktuelles Wetter vom API |
 | 3–5 | Vorhersage für die nächsten drei Zeitpunkte (+3 h, +6 h, +9 h) |
 
@@ -91,6 +115,22 @@ Fast alles wird zur Laufzeit eingestellt. Im Code anpassbar sind in
 > lässt sich aus einer veröffentlichten `firmware.bin` auslesen. Für ein
 > öffentliches Repository einen eigenen, kostenlosen Key bei OpenWeatherMap
 > anlegen und ihn nicht als geheim betrachten.
+
+## Fehlersuche
+
+**„BME280 fehlt!" auf dem Display.** Die Station läuft weiter, zeigt aber keine
+eigenen Messwerte – Wetterdaten aus dem Internet und die Webseite funktionieren
+normal. Im seriellen Monitor (115200 Baud) gibt sie beim Start einen I²C-Scan
+aus, der alle gefundenen Adressen auflistet. Typische Ursachen:
+
+- **Nichts gefunden:** Verkabelung prüfen. SDA gehört an `D2`, SCL an `D1`,
+  dazu `3V3` und `GND`. Ein vertauschtes SDA/SCL ist der häufigste Fehler.
+- **Ein Gerät gefunden, aber der Sensor wird trotzdem abgelehnt:** Auf dem
+  Modul sitzt vermutlich ein **BMP280** statt eines BME280. Beide nutzen
+  dieselben Adressen, der BMP280 misst aber keine Luftfeuchte und wird von der
+  Bibliothek an der Chip-Kennung erkannt und abgelehnt.
+- Die Adressen `0x76` und `0x77` werden beide automatisch probiert, ein
+  Jumper auf dem Modul spielt also keine Rolle.
 
 ## Projektstruktur
 

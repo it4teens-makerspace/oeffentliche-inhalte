@@ -172,10 +172,70 @@ void WifiManager::startPortal() {
 }
 
 void WifiManager::loop() {
+  checkSerialSetup();   // Einrichtung ueber USB ist immer moeglich
   if (!_portalActive) return;
   _dnsServer.processNextRequest();
   _webServer.handleClient();
 }
+
+// ---------------------------------------------------------------- Serielle Einrichtung
+
+void WifiManager::checkSerialSetup() {
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (_serialBuffer.length() > 0) {
+        String zeile = _serialBuffer;
+        _serialBuffer = "";
+        processSerialCommand(zeile);
+      }
+    } else if (_serialBuffer.length() < 200) {   // Schutz gegen Muell auf der Leitung
+      _serialBuffer += c;
+    } else {
+      _serialBuffer = "";
+    }
+  }
+}
+
+void WifiManager::processSerialCommand(const String& zeile) {
+  String cmd = zeile;
+  cmd.trim();
+
+  if (cmd == "PING") {          // Erreichbarkeitstest der Webseite
+    Serial.println(F("PONG"));
+    return;
+  }
+
+  if (!cmd.startsWith("SETUP:")) return;   // andere Ausgaben ignorieren
+
+  String rest = cmd.substring(6);
+  int t1 = rest.indexOf('|');
+  int t2 = rest.indexOf('|', t1 + 1);
+  if (t1 < 0 || t2 < 0) {
+    Serial.println(F("ERR Format"));
+    return;
+  }
+
+  String ssid = rest.substring(0, t1);
+  String pass = rest.substring(t1 + 1, t2);
+  String ort  = rest.substring(t2 + 1);
+  ssid.trim();
+  ort.trim();
+
+  if (ssid.length() == 0) {
+    Serial.println(F("ERR SSID leer"));
+    return;
+  }
+  if (ort.length() == 0) ort = DEFAULT_CITY;
+
+  saveCredentials(ssid, pass, ort);
+  Serial.println(F("OK"));
+  Serial.flush();
+  delay(300);
+  ESP.restart();
+}
+
+// ---------------------------------------------------------------- Portal-Seite
 
 String WifiManager::buildPage(const String& hinweis) {
   String html;

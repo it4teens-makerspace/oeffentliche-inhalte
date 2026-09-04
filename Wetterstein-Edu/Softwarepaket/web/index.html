@@ -20,21 +20,35 @@
   }
   h1 { background: #428f9c; color: #fff; margin: -24px -24px 20px;
        padding: 16px 24px; border-radius: 8px 8px 0 0; font-size: 1.4rem; }
-  ol { line-height: 1.7; padding-left: 20px; }
-  .flash { text-align: center; margin: 28px 0; }
-  esp-web-install-button { --esp-tools-button-color: #fff;
-                           --esp-tools-button-text-color: #428f9c; }
-  button.fallback {
+  h2 { font-size: 1.1rem; margin: 28px 0 8px; }
+  .schritt { border-top: 1px solid #ddd; padding-top: 4px; margin-top: 24px; }
+  .flash { text-align: center; margin: 20px 0; }
+  label { display: block; margin-top: 12px; font-weight: bold; }
+  input { width: 100%; padding: 9px; margin-top: 4px; box-sizing: border-box;
+          border: 1px solid #bbb; border-radius: 4px; font-size: 1rem; }
+  button.aktion {
     background: #428f9c; color: #fff; border: 0;
     padding: 12px 22px; font-size: 1rem; border-radius: 4px; cursor: pointer;
   }
+  button.aktion:disabled { background: #9bbcc2; cursor: default; }
+  #senden { width: 100%; margin-top: 18px; }
+  .status { margin-top: 14px; padding: 10px; border-radius: 4px; display: none; }
+  .status.an { display: block; }
+  .status.ok  { background: #e3f5e5; border-left: 4px solid #3bb963; }
+  .status.err { background: #fdeaea; border-left: 4px solid #b00; }
+  .status.info{ background: #eaf3f5; border-left: 4px solid #428f9c; }
   .hinweis { background: #fff4d6; border-left: 4px solid #e2b205;
              padding: 12px; margin-top: 20px; font-size: .95rem; }
+  .tipp { color: #666; font-size: .85rem; margin: 6px 0 0; }
   .version { text-align: center; color: #777; font-size: .85rem; margin-top: 24px; }
   @media (prefers-color-scheme: dark) {
     body { background: #1b1d1f; color: #e6e6e6; }
     .box { background: #26292b; box-shadow: none; }
+    .schritt { border-color: #3a3d40; }
+    input { background: #1b1d1f; color: #e6e6e6; border-color: #4a4d50; }
     .hinweis { background: #3a3520; }
+    .status.ok { background: #1f3524; } .status.err { background: #3a2020; }
+    .status.info { background: #1f3034; }
   }
 </style>
 </head>
@@ -42,39 +56,63 @@
 <div class="box">
   <h1>Wetterstation auf den ESP flashen</h1>
 
-  <ol>
-    <li>ESP8266 (NodeMCU) per <strong>USB-Kabel</strong> an den Rechner anschliessen
-        &ndash; ein Ladekabel ohne Datenadern funktioniert nicht.</li>
-    <li>Auf <em>Verbinden</em> klicken und im Browser-Dialog den seriellen Port
-        des ESP auswaehlen (meist &bdquo;CH340&ldquo; oder &bdquo;CP210x&ldquo;).</li>
-    <li>&bdquo;Install Wetterstation&ldquo; waehlen und warten, bis der Vorgang
-        abgeschlossen ist (ca. 1&ndash;2 Minuten).</li>
-    <li>Danach oeffnet die Wetterstation das WLAN <strong>Wetterstation-Setup</strong>
-        (Passwort <code>wetter1234</code>). Damit verbinden &ndash; die Setup-Seite
-        oeffnet sich automatisch, sonst <code>192.168.4.1</code> aufrufen &ndash;
-        und dort das eigene WLAN sowie den <strong>Ort fuer die Wettervorhersage</strong>
-        (z.&nbsp;B. <code>Aachen,de</code>) eintragen.</li>
-  </ol>
+  <p>ESP8266 (NodeMCU) per <strong>USB-Kabel</strong> anschliessen &ndash; ein reines
+     Ladekabel ohne Datenadern funktioniert nicht. Dann die beiden Schritte
+     nacheinander ausfuehren.</p>
 
-  <div class="flash">
-    <esp-web-install-button manifest="manifest.json">
-      <button slot="activate" class="fallback">Verbinden und flashen</button>
-      <span slot="unsupported">
-        Dieser Browser unterstuetzt kein Web Serial.
-        Bitte <strong>Chrome</strong> oder <strong>Edge</strong> auf einem
-        Desktop-Rechner verwenden.
-      </span>
-      <span slot="not-allowed">
-        Die Seite muss ueber <strong>https</strong> geoeffnet werden.
-      </span>
-    </esp-web-install-button>
+  <div class="schritt">
+    <h2>Schritt 1 &ndash; Firmware aufspielen</h2>
+    <p>Auf <em>Verbinden</em> klicken, im Browser-Dialog den seriellen Port des ESP
+       auswaehlen (meist &bdquo;CH340&ldquo; oder &bdquo;CP210x&ldquo;), dann
+       &bdquo;Install Wetterstation&ldquo; waehlen. Dauert ein bis zwei Minuten.</p>
+    <div class="flash">
+      <esp-web-install-button manifest="manifest.json">
+        <button slot="activate" class="aktion">Verbinden und flashen</button>
+        <span slot="unsupported">
+          Dieser Browser unterstuetzt kein Web Serial.
+          Bitte <strong>Chrome</strong> oder <strong>Edge</strong> auf einem
+          Desktop-Rechner verwenden.
+        </span>
+        <span slot="not-allowed">
+          Die Seite muss ueber <strong>https</strong> geoeffnet werden.
+        </span>
+      </esp-web-install-button>
+    </div>
+  </div>
+
+  <div class="schritt">
+    <h2>Schritt 2 &ndash; WLAN und Ort uebertragen</h2>
+    <p>Nach dem Flashen hier die Zugangsdaten eintragen und senden. Sie gehen ueber
+       dasselbe USB-Kabel an die Wetterstation und werden dort dauerhaft gespeichert.</p>
+
+    <label for="ssid">WLAN-Name (SSID)</label>
+    <input type="text" id="ssid" maxlength="32" autocomplete="off">
+
+    <label for="pass">WLAN-Passwort</label>
+    <input type="password" id="pass" maxlength="64" autocomplete="off">
+
+    <label for="ort">Ort fuer die Wettervorhersage</label>
+    <input type="text" id="ort" maxlength="48" value="Aachen,de" autocomplete="off">
+    <p class="tipp">Format: Ort,Laendercode &ndash; z.&nbsp;B. <code>Aachen,de</code>,
+       <code>Wien,at</code> oder <code>New York,us</code></p>
+
+    <button id="senden" class="aktion">An die Wetterstation senden</button>
+    <div id="status" class="status"></div>
   </div>
 
   <div class="hinweis">
+    <strong>Deine Daten bleiben bei dir.</strong> Diese Seite besteht nur aus
+    statischen Dateien, es gibt keinen Server, der etwas entgegennimmt.
+    WLAN-Name und Passwort verlassen den Browser ausschliesslich ueber das
+    USB-Kabel zur Wetterstation.
+    <br><br>
     <strong>Voraussetzungen:</strong> Chrome, Edge oder Opera auf Windows, macOS
-    oder Linux. Firefox, Safari, iPhone und Android werden nicht unterstuetzt,
-    da sie kein Web Serial koennen. Unter Windows ist evtl. der
-    USB-Treiber (CH340 bzw. CP210x) noetig.
+    oder Linux. Firefox, Safari, iPhone und Android koennen kein Web Serial.
+    Unter Windows ist evtl. der USB-Treiber CH340 bzw. CP210x noetig.
+    <br><br>
+    Klappt Schritt 2 nicht, geht es auch ohne: Die Wetterstation oeffnet das WLAN
+    <strong>Wetterstation-Setup</strong> (Passwort <code>wetter1234</code>).
+    Damit verbinden und die Daten auf der Seite <code>192.168.4.1</code> eintragen.
   </div>
 
   <p class="version">
@@ -82,5 +120,131 @@
     <a href="Softwarepaket.zip">Quellcode als Softwarepaket.zip herunterladen</a>
   </p>
 </div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const statusEl = $('status');
+
+  function zeige(text, art) {
+    statusEl.textContent = text;
+    statusEl.className = 'status an ' + (art || 'info');
+  }
+
+  const schlaf = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Liest im Hintergrund alles, was der ESP schickt, in einen Puffer.
+  function leserStarten(port, puffer) {
+    const reader = port.readable.getReader();
+    const decoder = new TextDecoder();
+    (async () => {
+      try {
+        while (true) {
+          const ergebnis = await reader.read();
+          if (ergebnis.done) break;
+          puffer.text += decoder.decode(ergebnis.value, { stream: true });
+        }
+      } catch (e) { /* Port wurde geschlossen */ }
+    })();
+    return reader;
+  }
+
+  // Wartet, bis eines der Stichworte im Puffer auftaucht.
+  async function wartenAuf(puffer, stichworte, timeoutMs) {
+    const ende = Date.now() + timeoutMs;
+    while (Date.now() < ende) {
+      for (const wort of stichworte) {
+        if (puffer.text.includes(wort)) return wort;
+      }
+      await schlaf(100);
+    }
+    return null;
+  }
+
+  async function senden() {
+    if (!('serial' in navigator)) {
+      zeige('Dieser Browser kann kein Web Serial. Bitte Chrome oder Edge am Desktop nutzen.', 'err');
+      return;
+    }
+
+    const ssid = $('ssid').value.trim();
+    const pass = $('pass').value;
+    const ort  = $('ort').value.trim() || 'Aachen,de';
+
+    if (!ssid) { zeige('Bitte einen WLAN-Namen eingeben.', 'err'); return; }
+    if (/[|\r\n]/.test(ssid + pass + ort)) {
+      zeige('Die Zeichen | und Zeilenumbrueche sind hier nicht erlaubt.', 'err');
+      return;
+    }
+
+    const knopf = $('senden');
+    knopf.disabled = true;
+
+    let port = null, reader = null, writer = null;
+    const puffer = { text: '' };
+    const encoder = new TextEncoder();
+
+    try {
+      zeige('Verbinde mit der Wetterstation...', 'info');
+
+      // Bereits freigegebenen Port wiederverwenden, sonst nachfragen
+      const bekannt = await navigator.serial.getPorts();
+      port = bekannt.length ? bekannt[0] : await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+
+      // Reset-Leitungen loesen, sonst bleibt der ESP je nach Board haengen
+      try {
+        await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+      } catch (e) { /* nicht jedes Board unterstuetzt das */ }
+
+      reader = leserStarten(port, puffer);
+      writer = port.writable.getWriter();
+
+      // Der ESP braucht nach dem Verbinden einen Moment zum Starten
+      await schlaf(1500);
+
+      zeige('Warte auf die Wetterstation...', 'info');
+      let antwort = null;
+      for (let versuch = 0; versuch < 15 && !antwort; versuch++) {
+        await writer.write(encoder.encode('PING\n'));
+        antwort = await wartenAuf(puffer, ['PONG'], 600);
+      }
+
+      if (!antwort) {
+        zeige('Keine Antwort von der Wetterstation. Ist Schritt 1 abgeschlossen und '
+            + 'das Geraet noch angesteckt? Notfalls USB kurz abziehen, wieder '
+            + 'anstecken und erneut senden.', 'err');
+        return;
+      }
+
+      zeige('Uebertrage Zugangsdaten...', 'info');
+      puffer.text = '';
+      await writer.write(encoder.encode('SETUP:' + ssid + '|' + pass + '|' + ort + '\n'));
+
+      const ergebnis = await wartenAuf(puffer, ['OK', 'ERR'], 5000);
+      if (ergebnis === 'OK') {
+        zeige('Gespeichert! Die Wetterstation startet neu und verbindet sich mit "'
+            + ssid + '". Die IP-Adresse steht danach auf der ersten Display-Seite.', 'ok');
+      } else if (ergebnis === 'ERR') {
+        zeige('Die Wetterstation hat die Daten abgelehnt: '
+            + puffer.text.trim().split('\n').pop(), 'err');
+      } else {
+        zeige('Keine Bestaetigung erhalten. Bitte erneut versuchen.', 'err');
+      }
+    } catch (e) {
+      zeige('Fehler beim Zugriff auf den USB-Port: ' + e.message
+          + ' - moeglicherweise ist der Port noch von Schritt 1 belegt. '
+          + 'Seite neu laden und nur Schritt 2 ausfuehren.', 'err');
+    } finally {
+      try { if (writer) { await writer.close(); writer.releaseLock(); } } catch (e) {}
+      try { if (reader) { await reader.cancel(); reader.releaseLock(); } } catch (e) {}
+      try { if (port) await port.close(); } catch (e) {}
+      knopf.disabled = false;
+    }
+  }
+
+  $('senden').addEventListener('click', senden);
+})();
+</script>
 </body>
 </html>

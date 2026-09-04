@@ -34,12 +34,20 @@ class WifiManager {
     void startPortal();        // Access Point + Webseite starten
     void resetCredentials();   // gespeicherte Zugangsdaten loeschen
 
+    // Einrichtung ueber die serielle Schnittstelle (USB), z. B. direkt nach
+    // dem Flashen im Browser. Muss regelmaessig aufgerufen werden.
+    // Protokoll (je eine Zeile):
+    //   PING                          -> PONG
+    //   SETUP:<ssid>|<passwort>|<ort> -> OK und Neustart, sonst ERR <grund>
+    void checkSerialSetup();
+
   private:
     void loadCredentials();
     void saveCredentials(const String& ssid, const String& password, const String& city);
     String buildPage(const String& hinweis);
     void handleRoot();
     void handleSave();
+    void processSerialCommand(const String& zeile);
 
     const char* _apSsid;
     const char* _apPassword;
@@ -49,6 +57,7 @@ class WifiManager {
     String _city;
 
     bool _portalActive = false;
+    String _serialBuffer;
 
     ESP8266WebServer _webServer{80};
     DNSServer        _dnsServer;
