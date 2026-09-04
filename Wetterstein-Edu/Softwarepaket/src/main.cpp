@@ -24,6 +24,7 @@ const char* AP_PASSWORD = "wetter1234";            // min. 8 Zeichen, sonst offe
 
 // Sensor / Display
 Adafruit_BME280 bme;  // BME280 Sensor
+bool bmeOk = false;   // true, wenn der Sensor beim Start gefunden wurde
 #define SEALEVELPRESSURE_HPA (1013.25) // Standard Luftdruck auf Meereshöhe
 GyverOLED<SSD1306_128x64> oled; // OLED Display
 
@@ -58,6 +59,22 @@ int lastDisplayedCase = -1;   // force first draw
 // Langer Tastendruck (3 s) loescht die gespeicherten WLAN-Daten
 const unsigned long resetHoldMs = 3000;
 static bool resetHandled = false;
+
+// Zeigt alle Adressen, die am I2C-Bus antworten. Hilft beim Suchen von
+// Verdrahtungsfehlern oder abweichenden Sensor-Adressen.
+void scanI2C() {
+  Serial.println(F("I2C-Scan:"));
+  int gefunden = 0;
+  for (byte addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) {
+      Serial.printf("  Geraet gefunden auf 0x%02X\r\n", addr);
+      gefunden++;
+    }
+    yield();
+  }
+  if (gefunden == 0) Serial.println(F("  Nichts gefunden - Verkabelung pruefen (SDA=D2, SCL=D1, 3V3, GND)"));
+}
 
 // LED Helper
 void updateLedFromHumidity(float h) {
@@ -141,16 +158,34 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.begin(115200);
-  Wire.begin();
-  delay(50);
+  Serial.println();
+  Serial.println(F("Wetterstation startet..."));
 
-  if (!bme.begin(0x76)) {
-    Serial.println(F("BME280 nicht gefunden!"));
-    while (true) yield();
-  }
+  Wire.begin();
+  delay(200);        // Display und Sensor brauchen nach dem Einschalten kurz Zeit
+
+  // Immer ausgeben, welche Geraete am I2C-Bus antworten. Erwartet werden
+  // 0x3C (OLED) und 0x76 oder 0x77 (BME280).
+  scanI2C();
 
   oled.init();
   oled.clear();
+  oled.setCursor(0,0); oled.print("Wetterstation");
+  oled.update();
+
+  // Sensor auf beiden ueblichen Adressen suchen. Wird er nicht gefunden,
+  // laeuft die Station trotzdem weiter - nur ohne eigene Messwerte.
+  bmeOk = bme.begin(0x76) || bme.begin(0x77);
+  Serial.printf("BME280: %s\r\n", bmeOk ? "gefunden" : "NICHT gefunden");
+  if (!bmeOk) {
+    oled.clear();
+    oled.setCursor(0,0); oled.print("BME280 fehlt!");
+    oled.setCursor(0,2); oled.print("Verkabelung");
+    oled.setCursor(0,4); oled.print("pruefen.");
+    oled.update();
+    delay(2000);
+    oled.clear();
+  }
 
   FastLED.addLeds<WS2812, LED_PIN>(leds, NUM_LEDS);
   FastLED.setBrightness(255);
@@ -180,6 +215,8 @@ void loop() {
     return;
   }
 
+  wifi.checkSerialSetup();   // Einrichtung per USB jederzeit moeglich
+
   // --- Button poll & debounce ---
   int s = digitalRead(BUTTON_PIN);
   if (s != lastButtonState) {
@@ -204,11 +241,13 @@ void loop() {
   }
   if (s == HIGH) { pressedHandled = false; resetHandled = false; }
 
-  // Sensorwerte einlesen
-  temperature = bme.readTemperature();
-  humidity    = bme.readHumidity();
-  pressure    = bme.readPressure() / 100.0F;
-  altitude    = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  // Sensorwerte einlesen (nur wenn der Sensor gefunden wurde)
+  if (bmeOk) {
+    temperature = bme.readTemperature();
+    humidity    = bme.readHumidity();
+    pressure    = bme.readPressure() / 100.0F;
+    altitude    = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  }
 
   // Nur neu zeichnen wenn sich buttonCase änderte
   if (buttonCase != lastDisplayedCase) {
@@ -221,6 +260,7 @@ void loop() {
         oled.setCursor(0,6); oled.print("Ort: "); oled.print(wetter.getCity());
         break;
       case 1:
+        if (!bmeOk) { oled.setCursor(0,0); oled.print("BME280 fehlt!"); break; }
         oled.setCursor(0,0); oled.print("Temp: "); oled.print(temperature,1); oled.print(" C");
         oled.setCursor(0,2); oled.print("Feuchte: "); oled.print(humidity,1); oled.print(" %");
         oled.setCursor(0,4); oled.print("Druck: "); oled.print(pressure,1); oled.print(" hPa");
@@ -264,7 +304,7 @@ void loop() {
   }
 
   // LED Farbe
-  updateLedFromHumidity(humidity);
+  if (bmeOk) updateLedFromHumidity(humidity);
 
   // OLED Anzeige
   oled.clear();
@@ -276,6 +316,7 @@ void loop() {
         oled.setCursor(0,6); oled.print("Ort: "); oled.print(wetter.getCity());
         break;
     case 1:
+      if (!bmeOk) { oled.setCursor(0, 0); oled.print("BME280 fehlt!"); break; }
       oled.setCursor(0, 0);
       oled.print("Temp: ");   oled.print(temperature, 1); oled.print(" C");
       oled.setCursor(0, 2);
