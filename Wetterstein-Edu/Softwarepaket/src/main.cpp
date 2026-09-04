@@ -158,18 +158,27 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.begin(115200);
+  Serial.println();
+  Serial.println(F("Wetterstation startet..."));
+
   Wire.begin();
-  delay(50);
+  delay(200);        // Display und Sensor brauchen nach dem Einschalten kurz Zeit
+
+  // Immer ausgeben, welche Geraete am I2C-Bus antworten. Erwartet werden
+  // 0x3C (OLED) und 0x76 oder 0x77 (BME280).
+  scanI2C();
 
   oled.init();
   oled.clear();
+  oled.setCursor(0,0); oled.print("Wetterstation");
+  oled.update();
 
   // Sensor auf beiden ueblichen Adressen suchen. Wird er nicht gefunden,
   // laeuft die Station trotzdem weiter - nur ohne eigene Messwerte.
   bmeOk = bme.begin(0x76) || bme.begin(0x77);
+  Serial.printf("BME280: %s\r\n", bmeOk ? "gefunden" : "NICHT gefunden");
   if (!bmeOk) {
-    Serial.println(F("BME280 nicht gefunden (weder 0x76 noch 0x77)."));
-    scanI2C();
+    oled.clear();
     oled.setCursor(0,0); oled.print("BME280 fehlt!");
     oled.setCursor(0,2); oled.print("Verkabelung");
     oled.setCursor(0,4); oled.print("pruefen.");
