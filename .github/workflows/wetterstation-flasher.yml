@@ -1,0 +1,94 @@
+# Baut die Wetterstations-Firmware und veroeffentlicht den Web-Flasher
+# unter https://it4teens-makerspace.github.io/oeffentliche-inhalte/wetterstation/
+name: Wetterstation Web-Flasher
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Wetterstein-Edu/Softwarepaket/**'
+      - '.github/workflows/wetterstation-flasher.yml'
+  workflow_dispatch:        # erlaubt manuelles Starten im Actions-Tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  PROJEKT_DIR: Wetterstein-Edu/Softwarepaket
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: PlatformIO-Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('Wetterstein-Edu/Softwarepaket/platformio.ini') }}
+
+      - name: PlatformIO installieren
+        run: pip install --upgrade platformio
+
+      - name: Firmware bauen
+        run: pio run -e nodemcuv2 -d "$PROJEKT_DIR"
+
+      - name: Webseite zusammenbauen
+        run: |
+          set -e
+          mkdir -p _site/wetterstation/firmware
+
+          # Flash-Seite und Firmware
+          cp -r "$PROJEKT_DIR"/web/. _site/wetterstation/
+          cp "$PROJEKT_DIR"/.pio/build/nodemcuv2/firmware.bin _site/wetterstation/firmware/firmware.bin
+
+          # Quellcode als Softwarepaket.zip zum Download
+          ( cd "$PROJEKT_DIR" && zip -qr "$GITHUB_WORKSPACE/_site/wetterstation/Softwarepaket.zip" \
+              src include lib platformio.ini README.md )
+
+          # Version in Manifest und Seite eintragen
+          VERSION="$(date -u +%Y-%m-%d)-${GITHUB_SHA::7}"
+          sed -i "s/__VERSION__/$VERSION/g" \
+              _site/wetterstation/manifest.json _site/wetterstation/index.html
+          echo "Veroeffentlichte Version: $VERSION"
+
+          # Startseite, damit die Pages-Wurzel kein 404 liefert
+          cat > _site/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="de"><head><meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>IT4Teens Makerspace</title>
+          <style>body{font-family:system-ui,Arial,sans-serif;max-width:600px;
+          margin:60px auto;padding:0 16px;line-height:1.6}</style></head>
+          <body><h1>IT4Teens Makerspace</h1>
+          <p>Oeffentliche Inhalte:</p>
+          <ul><li><a href="wetterstation/">Wetterstation flashen</a></li></ul>
+          </body></html>
+          HTML
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
