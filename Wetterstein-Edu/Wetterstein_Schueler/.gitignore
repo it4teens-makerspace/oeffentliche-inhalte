@@ -1,0 +1,29 @@
+# ============================================================
+#  Nur fuer die Lehrkraft - wird NICHT auf GitHub hochgeladen
+# ============================================================
+
+# Loesungen in allen Aufgaben-Ordnern
+#loesung/
+
+# Hinweise fuer die Lehrkraft
+LEHRKRAFT.md
+
+# Vorbereitungsheft (komplett ausgeschlossen)
+#   Vorbereitungsheft/
+# Falls das Schueler-Heft doch hochgeladen werden soll:
+# die Zeile "Vorbereitungsheft/" oben durch die beiden Zeilen ersetzen:
+Vorbereitungsheft/*
+!Vorbereitungsheft/Wetterstein_Vorbereitungsheft_Schueler.pdf
+
+# Word-Dokumente (komplett ausgeschlossen)
+Word-Dokumente/*
+#!Word-Dokumente\00 Gesamtanleitung fuer Schueler.docx
+
+# ============================================================
+#  Technischer Ballast
+# ============================================================
+.pio/
+~$*
+*.tmp
+Thumbs.db
+desktop.ini
