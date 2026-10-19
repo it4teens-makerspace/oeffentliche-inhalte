@@ -29,7 +29,31 @@ Dazu kommen etwa 15 Minuten Einstieg und 15 Minuten Puffer.
 > **Wo ist das WLAN?** Der Wetterstein kann seine Daten später auch ins Netz schicken.
 > Dieser Teil ist ein eigener Baustein des Gesamtprojekts und hat sein eigenes
 > Repository – er ist hier bewusst nicht dabei, sonst wird der Tag zu lang.
-> → Link: *(hier das GitHub-Repo des WLAN-Bausteins eintragen)*
+> → Link: https://github.com/it4teens-makerspace/oeffentliche-inhalte/tree/main/Wetterstein-Edu/Softwarepaket
+
+---
+
+## Wo finde ich was?
+
+**Die Aufgabenblätter** – hier klicken, um die jeweilige Aufgabe zu öffnen:
+
+| # | Aufgabenblatt (hier klicken) | Deine Arbeitsdatei in VS Code |
+|---|---|---|
+| 1 | [Aufgabe 1 – OLED-Display](Aufgabe%201%20-%20OLED/AUFGABE.md) | `Aufgabe 1 - OLED/src/main_OLED.cpp` |
+| 2 | [Aufgabe 2 – RGB-LED](Aufgabe%202%20-%20RGB-LED/AUFGABE.md) | `Aufgabe 2 - RGB-LED/src/main_LED.cpp` |
+| 3 | [Aufgabe 3 – Taster](Aufgabe%203%20-%20Taster/AUFGABE.md) | `Aufgabe 3 - Taster/src/main_Button.cpp` |
+| 4 | [Aufgabe 4 – Wettersensor](Aufgabe%204%20-%20BME/AUFGABE.md) | `Aufgabe 4 - BME/src/main_BME.cpp` |
+
+Auf GitHub geht es auch ohne die Links: Klicke auf den Ordner der Aufgabe, zum Beispiel
+**`Aufgabe 1 - OLED`**, und darin auf die Datei **`AUFGABE.md`**.
+
+**Die ganze Anleitung als PDF** – zum Lesen oder Ausdrucken:
+
+> 📄 [00 Gesamtanleitung fuer Schueler.pdf](Word-Dokumente/00%20Gesamtanleitung%20fuer%20Schueler.pdf)
+>
+> Sie liegt im Ordner **`Word-Dokumente`**. Auf GitHub: Ordner `Word-Dokumente` anklicken
+> → `00 Gesamtanleitung fuer Schueler.pdf` anklicken → oben rechts auf den
+> **Download-Knopf** (Pfeil nach unten) klicken, um sie zu speichern.
 
 ---
 
@@ -104,7 +128,8 @@ schreibst und dann erst baust, hast du zwanzig Fehler auf einmal.
 Nur dort musst du etwas schreiben. Alles andere ist schon fertig.
 
 Zu jeder Aufgabe gibt es außerdem ein Aufgabenblatt: **`AUFGABE.md`** im jeweiligen
-Ordner. Dort steht ausführlich, worum es geht.
+Ordner. Dort steht ausführlich, worum es geht. Die Links zu allen vier Blättern findest
+du oben unter [Wo finde ich was?](#wo-finde-ich-was).
 
 ---
 
