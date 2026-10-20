@@ -1,5 +1,8 @@
 # Wetterstation (ESP8266)
 
+BEVOR WIR BEGINNEN BITTE DEN PRE-TEST MACHEN: 
+>https://www.soscisurvey.de/infoSphere-CT/?q=IS-FH-Pre01
+
 Eine WLAN-Wetterstation auf Basis eines NodeMCU (ESP8266). Sie misst lokal
 Temperatur, Luftfeuchte und Luftdruck mit einem BME280 und holt sich zusätzlich
 das aktuelle Wetter sowie eine 24-Stunden-Vorhersage von
